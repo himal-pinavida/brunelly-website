@@ -3560,22 +3560,19 @@ document.addEventListener('keydown', function(e) {
 });
 
 function saveLead(name, email) {
-  fetch('https://frznrjgbbkfvjrxjcaho.supabase.co/rest/v1/leads', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'apikey': 'sb_publishable_Dwq-UtleJ8vEKYDpCV4TuQ_GneAVjTD',
-      'Authorization': 'Bearer sb_publishable_Dwq-UtleJ8vEKYDpCV4TuQ_GneAVjTD',
-      'Prefer': 'return=minimal'
-    },
-    body: JSON.stringify({
+  supabaseClient
+    .from('leads')
+    .insert([{
       name: name,
       email: email,
       source: 'chatbot',
       page: window.location.href,
       created_at: new Date().toISOString()
+    }])
+    .then(function(result) {
+      if (result.error) console.log('Lead save error:', result.error);
     })
-  }).catch(function(e) { console.log('Lead save error:', e); });
+    .catch(function(e) { console.log('Lead save error:', e); });
 }
 
 function scrollChat() {
@@ -3591,44 +3588,33 @@ setTimeout(function() {
 }, 8000);
 </script>
 
-
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/supabase.min.js"></script>
 <script>
-(function() {
-  var SUPA_URL = 'https://frznrjgbbkfvjrxjcaho.supabase.co';
-  var SUPA_KEY = 'sb_publishable_Dwq-UtleJ8vEKYDpCV4TuQ_GneAVjTD';
+const SUPA_URL = 'https://gupshlonfltnngebwdqx.supabase.co';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd1cHNobG9uZmx0bm5nZWJ3ZHF4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMzczNzEsImV4cCI6MjA5MzYxMzM3MX0.ifR8M-sgmtTfy4hGjn1R9SG8edZzhvgfKzeehsx5YcU';
+const supabaseClient = supabase.createClient(SUPA_URL, SUPA_KEY);
 
-  fetch(SUPA_URL + '/rest/v1/hero_images?select=id,image_url', {
-    headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY }
-  })
-  .then(function(r) { return r.json(); })
-  .then(function(data) {
-    if (!Array.isArray(data)) return;
-    data.forEach(function(row) {
-      if (!row.image_url) return;
-      var panel = document.querySelector('.showcase-panel[data-panel="' + row.id + '"] .showcase-media');
-      if (!panel) return;
-      // Replace placeholder with image
-      panel.innerHTML = '<img src="' + row.image_url + '" class="showcase-img" alt="Brunelly ' + row.id + '" />';
-    });
-  })
-  .catch(function(){});
+(function() {
+  supabaseClient
+    .from('hero_images')
+    .select('id,image_url')
+    .then(function(result) {
+      if (result.error || !Array.isArray(result.data)) return;
+      result.data.forEach(function(row) {
+        if (!row.image_url) return;
+        var panel = document.querySelector('.showcase-panel[data-panel="' + row.id + '"] .showcase-media');
+        if (!panel) return;
+        panel.innerHTML = '<img src="' + row.image_url + '" class="showcase-img" alt="Brunelly ' + row.id + '" />';
+      });
+    })
+    .catch(function() {});
 })();
-</script>
-<script>
-(function() {
-  var SUPA_URL = 'https://frznrjgbbkfvjrxjcaho.supabase.co';
-  var SUPA_KEY = 'sb_publishable_Dwq-UtleJ8vEKYDpCV4TuQ_GneAVjTD';
 
+(function() {
   function fireEvent(evt) {
-    fetch(SUPA_URL + '/rest/v1/analytics_events', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'apikey': SUPA_KEY,
-        'Authorization': 'Bearer ' + SUPA_KEY,
-        'Prefer': 'return=minimal'
-      },
-      body: JSON.stringify({
+    supabaseClient
+      .from('analytics_events')
+      .insert([{
         type: evt.type,
         ts: evt.ts,
         source: evt.source || null,
@@ -3642,8 +3628,11 @@ setTimeout(function() {
         email: evt.email || null,
         page_url: window.location.pathname,
         created_at: new Date().toISOString()
+      }])
+      .then(function(result) {
+        if (result.error) console.log('Analytics event error:', result.error);
       })
-    }).catch(function(){});
+      .catch(function() {});
   }
 
   function getSource() {
